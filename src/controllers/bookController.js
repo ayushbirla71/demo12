@@ -1,5 +1,7 @@
 const { count } = require("console")
 const BookModel= require("../models/bookModel")
+const BookLsModel= require("../models/boolLsModel")
+const autherModel= require("../models/autherLs")
 
 const createBook= async function (req, res) {
     let data= req.body
@@ -37,12 +39,67 @@ const getParticularBooks=async function(req, res){
 const getXINRBooks=async function(req, res){
     let xin= await BookModel.find({"prices.indianPrice":{ $in: ["100","200","500"] }})
     console.log(xin)
+    res.send({msg: xin})
 }
 
 const getRandomBooks=async function(req, res){
-    let random=await BookModel.find({ totalPages: { $gte:  500 },  stockAvailable: true  } )
+    let random=await BookModel.find({ totalPages: { $gte:  100 },  stockAvailable: true  } )
     res.send({msg:random})
 }
+
+const getBookLsCreate=async function(req, res){
+    let data=req.body
+    let list =await BookLsModel.create(data)
+    res.send({msg:list})
+}
+
+const getAutherLs=async function(req, res){
+    let auther=req.body
+    let autherList=await autherModel.create(auther)
+    res.send({msg:autherList})
+}
+
+const getautherbook=async function (req, res){
+        let authorId =await autherModel.findOne({author_name:"Ramanujan"}).select({author_id:1, _id:0})
+
+        let bookName=await BookLsModel.find(authorId).select({bookName:1})
+
+    
+      res.send({msg: bookName})
+    }
+const getUser1= async function (req , res){
+    let user=await BookLsModel.findOne({bookName:"Tow states"}).select({author_id:1, _id:0})
+    let updatPrice=await BookLsModel.findOneAndUpdate(user,{$set:{prices:100}},{new:true}).select({prices:1, _id:0})
+
+    let autherOfThisBook=await autherModel.findOne(user).select({author_name:1, _id:0})
+    res.send({updatedPrice : updatPrice.prices, autherOfThisBook:autherOfThisBook.author_name})
+
+}
+
+const getUserData= async function(req, res){
+    let userAll=await BookLsModel.find({prices:{$gte:50, $lte:100}}).select({author_id:1, _id:0})
+    let userAll1=await BookLsModel.find({prices:{$gte:50, $lte:100}}).select({bookName:1, _id:0})
+    let arr=[];
+    for(let i=0; i<userAll.length; i++){
+        let arr2=await autherModel.findOne(userAll[i]).select({author_name:1, _id:0});
+        arr.push(arr2);
+    }
+    console.log(arr, userAll1)
+    // console.log(userAll1)
+}
+    // let xx= await autherModel.find({ author_name: "Chetan Bhagat"}).select({ author_name: 0, author_id: 1,} )
+    // console.log(xx)
+    // let yy= await BookLsModel.find()
+    // console.log(yy)
+    // const yy=async function(){
+        // let value= await BookLsModel.find({author_id: 1})
+        // console.log( value)
+    
+    
+    // const Xx=async function (){
+    // let yy= await BookLsModel.find({author_id: 1})
+    // console.log(Xx)}
+// }
     // let allBooks= await BookModel.find( ).count() // COUNT
 
     // let allBooks= await BookModel.find( { authorName : "Chetan Bhagat" , isPublished: true  } ) // AND
@@ -118,3 +175,8 @@ module.exports.getBooksinYear=getBooksinYear
 module.exports.getParticularBooks=getParticularBooks
 module.exports.getRandomBooks=getRandomBooks
 module.exports.getXINRBooks=getXINRBooks
+module.exports.getBookLsCreate=getBookLsCreate
+module.exports.getAutherLs=getAutherLs
+module.exports.getautherbook=getautherbook
+module.exports.getUser1=getUser1
+module.exports.getUserData=getUserData
